@@ -139,13 +139,26 @@ class QHangupsMainWidget(QtWidgets.QWidget):
 
     def get_credentials(self):
         """Ask user for OAuth 2 authorization code"""
-        browser = QHangupsBrowser(hangups.auth.OAUTH2_LOGIN_URL, self).exec_()
-        code, ok = QtWidgets.QInputDialog.getText(self, self.tr("QHangups - Authorization"),
-                                                  self.tr("Authorization code:"),
-                                                  QtWidgets.QLineEdit.Normal)
-        if ok and code:
-            return code
-        else:
+        try:
+            browser = QHangupsBrowser(hangups.auth.OAUTH2_LOGIN_URL, self)
+            browser.exec()
+            if not browser.authenticationCode:
+                QtWidgets.QMessageBox.information(self, self.tr("QHangups - Authorization"),
+                                "If you are seeing this message, then QHangups was unable to authenticate.\n"
+                                "Possible reason: You have closed the Browser Windows with Google Authorization "
+                                "prompt and/or didn't allow QHangups to access your Google Accout.\n\n"
+                                "Please try connecting again")
+                ok = False
+                code = ""
+            else:
+                ok = True
+                code = browser.authenticationCode
+            if ok and code:
+                return code
+            else:
+                return None
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
             return None
 
     def update_status(self):
